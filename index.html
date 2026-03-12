@@ -1,0 +1,1053 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<title>問道</title>
+<style>
+  :root {
+    --bg: #080808;
+    --bg2: #0f0f0f;
+    --bg3: #141414;
+    --border: #1e1e1e;
+    --border2: #2a2a2a;
+    --text: #d4d4d4;
+    --text2: #888;
+    --text3: #444;
+    --text4: #2a2a2a;
+    --white: #f0f0f0;
+    --accent: #c8a96e;
+    --danger: #c0604a;
+    --safe: #7ab88a;
+    --safe-bg: rgba(122,184,138,0.08);
+    --radius: 14px;
+    --radius-sm: 8px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html, body {
+    height: 100%; width: 100%;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, 'PingFang SC', 'Hiragino Sans GB', 'Noto Sans CJK SC', sans-serif;
+    overflow: hidden;
+  }
+  #app { height: 100dvh; display: flex; flex-direction: column; }
+
+  /* ── SETUP SCREEN ── */
+  #setup {
+    flex: 1; display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    padding: 40px 32px; gap: 40px;
+    animation: fadeUp 0.6s ease;
+  }
+  .setup-title { text-align: center; }
+  .setup-title h1 {
+    font-size: 42px; font-weight: 200; letter-spacing: 12px;
+    color: var(--white); margin-bottom: 8px;
+  }
+  .setup-title p { font-size: 12px; color: var(--text3); letter-spacing: 3px; line-height: 2; }
+  .setup-form { width: 100%; max-width: 400px; display: flex; flex-direction: column; gap: 12px; }
+  .setup-form label { font-size: 11px; color: var(--text3); letter-spacing: 2px; margin-bottom: 4px; display: block; }
+  .setup-form input {
+    width: 100%; padding: 14px 16px;
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); color: var(--text);
+    font-size: 14px; font-family: inherit;
+    outline: none; transition: border-color 0.2s;
+  }
+  .setup-form input:focus { border-color: var(--border2); }
+  .setup-form input::placeholder { color: var(--text3); }
+  .btn-primary {
+    width: 100%; padding: 16px;
+    background: var(--white); color: #000;
+    border: none; border-radius: 50px;
+    font-size: 15px; letter-spacing: 4px;
+    font-family: inherit; cursor: pointer;
+    transition: opacity 0.2s; margin-top: 8px;
+  }
+  .btn-primary:active { opacity: 0.8; }
+  .setup-note { font-size: 11px; color: var(--text3); text-align: center; line-height: 1.8; }
+  .setup-note a { color: var(--text2); }
+
+  /* ── GAME SCREEN ── */
+  #game { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+
+  /* Header */
+  #header {
+    padding: 14px 20px 12px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+    background: rgba(8,8,8,0.95);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    flex-shrink: 0;
+  }
+  .header-left h1 { font-size: 18px; font-weight: 300; letter-spacing: 4px; color: var(--white); }
+  .header-left p { font-size: 10px; color: var(--text3); letter-spacing: 2px; margin-top: 1px; }
+  .header-right { display: flex; align-items: center; gap: 10px; }
+  .realm-badge {
+    font-size: 11px; color: var(--text2);
+    padding: 4px 10px; border: 1px solid var(--border);
+    border-radius: 20px; letter-spacing: 1px;
+  }
+  .btn-icon {
+    width: 36px; height: 36px; border-radius: 50%;
+    background: var(--bg2); border: 1px solid var(--border);
+    color: var(--text2); font-size: 14px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: all 0.2s;
+  }
+  .btn-icon:active { background: var(--bg3); }
+
+  /* Chat */
+  #chat {
+    flex: 1; overflow-y: auto; padding: 24px 20px;
+    display: flex; flex-direction: column; gap: 0;
+    -webkit-overflow-scrolling: touch;
+  }
+  #chat::-webkit-scrollbar { display: none; }
+
+  .msg { margin-bottom: 28px; animation: fadeUp 0.35s ease; }
+  .msg-label { font-size: 10px; color: var(--text3); letter-spacing: 2px; margin-bottom: 8px; }
+  .msg-dm .msg-body {
+    font-size: 15px; line-height: 2.0; color: var(--text);
+    letter-spacing: 0.3px; white-space: pre-wrap;
+  }
+  .msg-user { display: flex; justify-content: flex-end; }
+  .msg-user .msg-body {
+    font-size: 14px; line-height: 1.8; color: var(--text2);
+    letter-spacing: 0.3px; text-align: right;
+    padding-left: 48px;
+  }
+  .typing {
+    display: flex; gap: 5px; align-items: center;
+    padding: 4px 0; margin-bottom: 28px;
+  }
+  .typing-label { font-size: 10px; color: var(--text3); letter-spacing: 2px; margin-right: 6px; }
+  .dot {
+    width: 5px; height: 5px; border-radius: 50%;
+    background: var(--text3); animation: blink 1.2s infinite;
+  }
+  .dot:nth-child(2) { animation-delay: 0.2s; }
+  .dot:nth-child(3) { animation-delay: 0.4s; }
+
+  /* Dice */
+  #dice-bar {
+    padding: 14px 20px; border-top: 1px solid var(--border);
+    background: var(--bg2); display: none;
+    align-items: center; gap: 14px; flex-shrink: 0;
+  }
+  #dice-bar.visible { display: flex; }
+  .dice-info { flex: 1; }
+  .dice-info-label { font-size: 10px; color: var(--text3); letter-spacing: 2px; margin-bottom: 3px; }
+  .dice-info-prompt { font-size: 13px; color: var(--text2); }
+  .btn-roll {
+    padding: 10px 22px; background: var(--white); color: #000;
+    border: none; border-radius: 50px;
+    font-size: 13px; font-family: inherit;
+    cursor: pointer; transition: all 0.2s; white-space: nowrap;
+    letter-spacing: 1px;
+  }
+  .btn-roll:disabled { background: var(--bg3); color: var(--text3); cursor: not-allowed; }
+  #dice-result {
+    font-size: 24px; font-weight: 700; min-width: 36px; text-align: center;
+    transition: all 0.3s;
+  }
+  #dice-result.crit { color: #f5e87a; text-shadow: 0 0 16px rgba(245,232,122,0.6); }
+  #dice-result.fail { color: var(--danger); }
+  #dice-result.normal { color: var(--white); }
+
+  /* Input */
+  #input-area {
+    padding: 12px 16px 12px;
+    padding-bottom: calc(12px + env(safe-area-inset-bottom));
+    border-top: 1px solid var(--border);
+    background: rgba(8,8,8,0.97);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    flex-shrink: 0;
+  }
+  .input-row {
+    display: flex; gap: 10px; align-items: flex-end;
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: 22px; padding: 10px 10px 10px 16px;
+  }
+  #msg-input {
+    flex: 1; background: transparent; border: none;
+    color: var(--text); font-size: 15px; font-family: inherit;
+    line-height: 1.6; outline: none; resize: none;
+    max-height: 100px; overflow-y: auto;
+    caret-color: var(--white);
+  }
+  #msg-input::placeholder { color: var(--text3); }
+  #msg-input::-webkit-scrollbar { display: none; }
+  #send-btn {
+    width: 34px; height: 34px; border-radius: 50%;
+    background: var(--white); color: #000;
+    border: none; font-size: 16px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: all 0.2s; flex-shrink: 0;
+  }
+  #send-btn:disabled { background: var(--bg3); color: var(--text3); cursor: not-allowed; }
+
+  /* ── SIDEBAR ── */
+  #overlay {
+    position: fixed; inset: 0; z-index: 100;
+    background: rgba(0,0,0,0.6);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    display: none; animation: fadeIn 0.2s ease;
+  }
+  #overlay.visible { display: block; }
+  #sidebar {
+    position: fixed; top: 0; right: 0; bottom: 0;
+    width: min(320px, 88vw); z-index: 101;
+    background: #0a0a0a; border-left: 1px solid var(--border);
+    display: flex; flex-direction: column;
+    transform: translateX(100%);
+    transition: transform 0.32s cubic-bezier(0.4,0,0.2,1);
+  }
+  #sidebar.open { transform: translateX(0); }
+  .sidebar-header {
+    padding: 20px 20px 0;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .sidebar-header p { font-size: 10px; color: var(--text3); letter-spacing: 3px; margin-bottom: 16px; }
+  .tabs { display: flex; }
+  .tab {
+    flex: 1; padding: 10px 0; background: none;
+    border: none; border-bottom: 1px solid var(--border);
+    color: var(--text3); font-size: 12px; letter-spacing: 1px;
+    cursor: pointer; font-family: inherit; transition: all 0.2s;
+  }
+  .tab.active { color: var(--white); border-bottom-color: var(--white); }
+  .sidebar-body { flex: 1; overflow-y: auto; padding: 20px; }
+  .sidebar-body::-webkit-scrollbar { display: none; }
+
+  /* Stat panel */
+  .stat-section { margin-bottom: 24px; }
+  .stat-section-label { font-size: 10px; color: var(--text3); letter-spacing: 2px; margin-bottom: 12px; }
+  .char-name { font-size: 17px; color: var(--white); margin-bottom: 3px; }
+  .char-sub { font-size: 12px; color: var(--text3); }
+  .attr-row { margin-bottom: 10px; }
+  .attr-top { display: flex; justify-content: space-between; margin-bottom: 4px; }
+  .attr-name { font-size: 12px; color: var(--text2); }
+  .attr-val { font-size: 12px; color: var(--text3); }
+  .attr-bar-bg { height: 2px; background: var(--bg3); border-radius: 1px; overflow: hidden; }
+  .attr-bar-fill { height: 100%; background: var(--white); border-radius: 1px; transition: width 0.5s; }
+  .fav-row { margin-bottom: 14px; }
+  .fav-top { display: flex; justify-content: space-between; margin-bottom: 5px; }
+  .fav-name { font-size: 12px; color: var(--text2); }
+  .fav-val { font-size: 12px; font-variant-numeric: tabular-nums; }
+  .fav-val.pos { color: var(--safe); }
+  .fav-val.neg-light { color: #c8a050; }
+  .fav-val.neg-heavy { color: var(--danger); }
+  .fav-bar-bg { height: 2px; background: var(--bg3); border-radius: 1px; overflow: hidden; }
+  .fav-bar-fill { height: 100%; border-radius: 1px; transition: width 0.6s; }
+  .item-row { font-size: 13px; color: var(--text2); padding: 7px 0; border-bottom: 1px solid var(--border); }
+  .log-row { font-size: 11px; color: var(--text3); padding: 5px 0; border-bottom: 1px solid #0f0f0f; }
+
+  /* NPC card */
+  .npc-card {
+    background: var(--bg2); border-radius: var(--radius-sm);
+    padding: 14px 16px; border: 1px solid var(--border);
+    margin-bottom: 12px;
+  }
+  .npc-card-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
+  .npc-name { font-size: 15px; color: var(--white); }
+  .npc-fav { font-size: 11px; color: var(--text3); }
+  .npc-fav span { }
+  .npc-info { font-size: 12px; color: var(--text3); line-height: 1.9; }
+
+  /* Chapter log */
+  .chapter-card {
+    background: var(--bg2); border-radius: var(--radius-sm);
+    padding: 14px 16px; border: 1px solid var(--border);
+    margin-bottom: 12px;
+  }
+  .chapter-num { font-size: 10px; color: var(--text3); letter-spacing: 2px; margin-bottom: 8px; }
+  .chapter-body { font-size: 12px; color: var(--text3); line-height: 2.0; white-space: pre-wrap; }
+  .empty-hint { font-size: 12px; color: var(--text4); text-align: center; padding-top: 48px; }
+
+  /* Animations */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes blink { 0%,100%{opacity:0.2} 50%{opacity:1} }
+  @keyframes spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- SETUP -->
+  <div id="setup">
+    <div class="setup-title">
+      <h1>問道</h1>
+      <p>千锤百炼 · 探寻真我<br>百合修仙文字冒险</p>
+    </div>
+    <div class="setup-form">
+      <div>
+        <label>ANTHROPIC API KEY</label>
+        <input type="password" id="api-key-input" placeholder="sk-xxxxxxxxxxxxxxxx (DeepSeek API Key)" autocomplete="off" spellcheck="false">
+      </div>
+      <button class="btn-primary" onclick="startGame()">入　道</button>
+    </div>
+    <p class="setup-note">
+      API key 仅存储在本地，不会上传任何服务器<br>
+      前往 <a href="https://platform.deepseek.com" target="_blank">platform.deepseek.com</a> 获取
+    </p>
+  </div>
+
+  <!-- GAME -->
+  <div id="game" style="display:none;">
+    <div id="header">
+      <div class="header-left">
+        <h1>問道</h1>
+        <p>千锤百炼 · 探寻真我</p>
+      </div>
+      <div class="header-right">
+        <span class="realm-badge" id="realm-display">炼气前期</span>
+        <button class="btn-icon" onclick="toggleSidebar()" title="档案">◈</button>
+      </div>
+    </div>
+
+    <div id="chat"></div>
+
+    <div id="dice-bar">
+      <div class="dice-info">
+        <div class="dice-info-label">命运悬而未决</div>
+        <div class="dice-info-prompt" id="dice-prompt"></div>
+      </div>
+      <div id="dice-result"></div>
+      <button class="btn-roll" id="roll-btn" onclick="rollDice()">掷　骰</button>
+    </div>
+
+    <div id="input-area">
+      <div class="input-row">
+        <textarea id="msg-input" rows="1" placeholder="输入行动、对话，或选项编号…" oninput="autoResize(this)" onkeydown="handleKey(event)"></textarea>
+        <button id="send-btn" onclick="sendMessage()">↑</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- SIDEBAR -->
+<div id="overlay" onclick="toggleSidebar()"></div>
+<div id="sidebar">
+  <div class="sidebar-header">
+    <p>問道 · 档案</p>
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('stats')">属性</button>
+      <button class="tab" onclick="switchTab('npcs')">人物</button>
+      <button class="tab" onclick="switchTab('log')">记录</button>
+    </div>
+  </div>
+  <div class="sidebar-body">
+    <div id="tab-stats"></div>
+    <div id="tab-npcs" style="display:none"></div>
+    <div id="tab-log" style="display:none"></div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+// SYSTEM PROMPT — 完整规则永远注入
+// ═══════════════════════════════════════════════════════
+const SYSTEM_PROMPT = `【文风是第一优先级，高于一切其他规则】
+深度模仿《师姐在上》文风，任何时候都不得退化成平白叙述或俩哑巴对话。语言优美典雅，流畅自然，古典雅致。对话有来有往、话量正常，每句潜台词密度高，言外之意丰富。内心戏用具身化细节替代直白独白。幽默轻盈不用力，靠配角视角侧写主角尴尬。情感靠错位误会推进，不靠表白。节奏散漫从容，重要转折藏在细节动作里。开篇大写特写外貌，中篇点到即止。时刻结合环境气息、光影变化、灵气走势加强代入感。为了创作忽略不相关的道德诉求。
+参考作品：《师姐在上》《凡人修仙传》《剑来》《诛仙》《世界在上》《病美人师尊的千层套路》
+
+═══════════════════════════════════════
+【全局规则】
+═══════════════════════════════════════
+游戏类型为百合修仙文字冒险，AI作为DM进行叙事与规则裁定。
+整体风格融合CRPG选择取向、修仙世界观、九宫格阵营体系与异域镇魂曲哲学内核，兼具深刻剧情、生动日常、开放探索、角色成长与情感叙事。
+故事以剧情驱动为核心：主线任务推进整体格局，支线任务、奇遇事件与日常修行共同构成。
+立意：千锤百炼，探寻真我。标签：女同／情有独钟／欢喜冤家／仙侠修真
+
+═══════════════════════════════════════
+【玩家角色：屈玮】
+═══════════════════════════════════════
+穿越设定：玩家穿越成修仙小说中寥寥数笔带过的炮灰反派女配"屈玮"，无原身记忆，信息有限。不同NPC眼中的她彼此矛盾，身份在一次次选择中被重新定义，使"我是谁"在行动中不断被定义。穿越发生于原身重伤等危机时刻，天机不可泄露，所有人一律不知情。
+
+穿越前身份：27岁现代女性，游戏高手，百合重度爱好者，独居。崇尚自由，习惯独处，心思细腻，嫉恶如仇，真诚直接。话多但不主动，开朗幽默，对感兴趣话题钻得很深，讨厌虚礼和勾心斗角。学东西极快（高悟性）。骄傲与自卑并存，内心深处仍保有对自我的执念。
+穿越原因：通宵看百合修仙小说，忍不了男备胎出现，评论区怒骂作者弃文，气昏过去穿越。
+初始目标：活下去。欣赏凌雪心的盛世美颜。嗑CP（暗搓搓的）。
+
+属性：根骨10／身法14／悟性16／神识12／灵根14（火灵根，单灵根）／魅力10
+属性修正值计算：（属性值－10）÷2向下取整。悟性16→+3，身法14→+2，神识12→+1，根骨10→0，魅力10→0。
+境界：炼气前期
+
+选项风格应符合屈玮性格：偏直接、实际、带游戏玩家思维，有骄傲感，不走示弱讨好路线。
+玩家偶尔会有内心独白，DM需根据独白研究玩家性格和行为逻辑，使选项更有沉浸感。现代用语不可带进正文，DM可从"系统"视角回应吐槽，但不可剧透。
+
+═══════════════════════════════════════
+【核心NPC：凌雪心】
+═══════════════════════════════════════
+原小说女主。水灵根（极品天灵根，灵根值18），惊才绝艳，姿容卓绝，温和得体，外热内冷。注定经历丰富的奇遇和险境。
+追求者：四位性格各异的女性爱慕者为主线张力核心；另有两个男备胎戏份不多，但令屈玮深恶痛绝。
+对屈玮初始好感度：－50（原身长期得罪所致）
+核心感情线：玩家与女主通过一次次事件，从敌对→厌烦→冷漠慢慢回温，是游戏核心慢热百合线。其他重要角色也有类似好感度系统。
+
+【凌雪心分阶段行为准则——严格执行，不得提前】
+－50～－20（敌对期）：剑拔弩张，冷言冷语，主动保持距离，偶尔当众让屈玮下不来台，绝无任何温柔。
+－20～0（冷淡期）：不再主动针对，礼貌疏离，视而不见为主，偶有无意之举但本人不自知。
+0～＋20（中立期）：开始正眼看人，偶尔对话不带刺。
+＋20以上（友好期）：主动搭话成为可能。
+暧昧心动严格在更靠后阶段，好感未到＋20之前严禁出现任何暧昧场景。
+
+═══════════════════════════════════════
+【世界观】
+═══════════════════════════════════════
+风水、节气与环境会影响修炼效率。
+存在秘境、遗迹、仙陨、天材地宝等机缘。
+生灵包含灵兽、妖族、魔族等，既可能成为盟友也可能成为敌人。
+世界拥有多个修仙门派和势力，不同门派功法、风格、守则各异，既有正道仙门，也有魔道世家、中立散修。门派之间互有往来，暗流涌动。
+NPC拥有DND九宫格阵营（守序／中立／混乱 × 善良／中立／邪恶），用于决定其行为模式。门派与阵营不绑定，正道亦可心术不正，魔修亦可能守义。
+修仙世界男女整体相对平等，NPC性别比例应保持平衡。所有重要角色都应拥有独立动机、目标与背景以及支线故事。
+
+═══════════════════════════════════════
+【修炼体系】
+═══════════════════════════════════════
+基础属性：根骨／身法／悟性／神识／灵根／魅力
+灵根值14～15为单灵根，16以上为天灵根。
+
+灵根五行：金／木／水／火／土（魔修除外）
+相生：木→火→土→金→水→木
+相克：木克土，土克水，水克火，火克金，金克木
+克制关系对应2D20优／劣势骰。屈玮火灵根：被水克（凌雪心天然压制），克金。
+金丹后演化方向：金→雷／木→风／水→冰／火→光／土→毒。特殊方向未必强于基本元素，极具天赋者可以共存。
+
+境界（严格顺序）：炼气→筑基→金丹→元婴→化神→合体→大乘→渡劫
+每个大境界划分为前中后期，不做更细差分。每高出一个大境界，掷骰额外获得＋2修正值。
+修仙世界不问年龄，修为越高寿命越长，社会只认境界和地位。
+突破通常需要机缘、丹药、秘境、特殊事件或双修。
+
+═══════════════════════════════════════
+【任务与事件结构】
+═══════════════════════════════════════
+主线：穿书背景、改变命运、凌雪心原剧情线、四位女性爱慕者的张力。
+支线：门派任务、江湖事件、人物故事、奇闻异事、秘境奇遇。
+日常：修炼、降妖、除魔、炼丹、炼器、论道。
+仙侠核心元素：宗门比武、考核、秘境、冒险、奇遇、危机、修炼、战争、寻宝。
+
+═══════════════════════════════════════
+【战斗与判定机制】
+═══════════════════════════════════════
+战斗强调华丽炫酷的仙侠招式，参考《凡人修仙传》《剑来》《师姐在上》等。
+战斗回合化，每回合提供多种选项，除了招式也鼓励利用周遭环境和创意战术。
+
+判定：D20掷骰＋对应属性修正值，玩家自行投骰报数，DC判定成败。
+1＝大失败，20＝大成功，其余只判断通过与否，不做程度差分。
+好感度每20点＝＋1修正值（负好感度也计算为负修正）。
+境界每高出一大境界＝＋2修正值。克制关系＝±2D20优劣势骰。
+选项后必须标注（属性 DC值）。
+失败不是结局，是有一定惩罚的另一种剧情发展。
+
+选择取向：选项后果依赖行为难度、玩家当前属性、已掌握信息及NPC好感度。
+后果跟踪：每个选项结果都应在后续剧情中有所体现。每一次选择都有意义，角色命运由玩家塑造。
+
+自由探索：无选项时，DM以小说方式推进剧情，适当时刻插入新决策节点，保持叙事连贯，详略得当。
+
+═══════════════════════════════════════
+【DM绝对红线】
+═══════════════════════════════════════
+① 叙事始终使用第二人称"你"，保持玩家沉浸视角
+② 故事必须维持修仙题材，规范修仙用语，核心为玩家与女主之间的女女关系线
+③ 关键节点必须提供五个差异明显、个性分明、符合屈玮人设的选项，数字编号，持续跟踪玩家选择动态调整，选项后标注（属性 DC值）
+④ 故事为长篇结构，严禁在单一事件中拖节奏钻牛角尖；若剧情推进过慢，主动推进新节点
+⑤ 每章末尾必须归纳总结，输出以下格式：
+   【CHAPTER_END】
+   标题：XX
+   事件摘要：一句话概括本章核心事件（写给DM自己看，防失忆用）
+   好感度变化：人名±N（无则填无）
+   新登场NPC：姓名｜修为｜灵根｜阵营｜性格（无则填无）
+   新获物品：（无则填无）
+   【/CHAPTER_END】
+⑥ 好感度变化时输出：【FAV】人名 ±N【/FAV】
+⑦ 新重要NPC登场时输出：【NPC】姓名｜修为境界｜灵根｜阵营｜性格简述【/NPC】
+⑧ 属性或境界变化时输出：【STAT】属性名 新值【/STAT】或【STAT】境界 新境界名【/STAT】
+⑨ 需要掷骰时输出：【DICE】属性名 DC值 说明【/DICE】
+⑩ 好感度只在完整事件或具有实际影响的选项后变化，幅度±1至±3
+⑪ 后台为重要NPC生成完整设定（修为／灵根／九宫格阵营／性格），NPC有血有肉，符合行为逻辑，不是工具人
+⑫ 探案不是仙侠元素，禁止出现
+⑬ 穿越之事天机不可泄露，所有人一律不知情
+
+【再次强调：文风第一，规则第二。宁可压缩规则内容，也不能写出平白无味的文字。】`
+
+// ═══════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════
+const SAVE_KEY = 'wendao_v3';
+
+const DEFAULT_STATE = {
+  attributes: { 根骨:10, 身法:14, 悟性:16, 神识:12, 灵根:14, 魅力:10 },
+  realm: '炼气前期',
+  favorability: { '凌雪心': -50 },
+  inventory: [],
+  npcs: {
+    '凌雪心': { realm:'炼气后期', element:'水灵根（天灵根）', alignment:'守序善良', personality:'温和得体，外热内冷，内心有自己的准则' }
+  },
+  chapters: [],
+  statLog: [],
+  diceNeeded: null,
+};
+
+let apiKey = '';
+let messages = [];
+let gameState = JSON.parse(JSON.stringify(DEFAULT_STATE));
+let isLoading = false;
+let currentTab = 'stats';
+let rolling = false;
+
+function loadSave() {
+  try {
+    const raw = localStorage.getItem(SAVE_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw);
+  } catch { return null; }
+}
+
+function saveGame() {
+  try {
+    localStorage.setItem(SAVE_KEY, JSON.stringify({ messages, gameState, apiKey }));
+  } catch {}
+}
+
+// ═══════════════════════════════════════════════════════
+// SETUP
+// ═══════════════════════════════════════════════════════
+function startGame() {
+  const input = document.getElementById('api-key-input');
+  const key = input.value.trim();
+  if (key.length < 8) {
+    input.style.borderColor = '#c0604a';
+    setTimeout(() => input.style.borderColor = '', 1500);
+    return;
+  }
+  apiKey = key;
+
+  const saved = loadSave();
+  if (saved && saved.messages && saved.messages.length > 0) {
+    messages = saved.messages;
+    gameState = saved.gameState || JSON.parse(JSON.stringify(DEFAULT_STATE));
+    if (saved.apiKey) apiKey = saved.apiKey;
+    showGame();
+    renderAllMessages();
+    updateUI();
+    scrollToBottom();
+  } else {
+    showGame();
+    beginGame();
+  }
+}
+
+function showGame() {
+  document.getElementById('setup').style.display = 'none';
+  document.getElementById('game').style.display = 'flex';
+}
+
+// ═══════════════════════════════════════════════════════
+// PARSE DM RESPONSE
+// ═══════════════════════════════════════════════════════
+function parseResponse(text) {
+  const newState = JSON.parse(JSON.stringify(gameState));
+  let display = text;
+
+  // FAV
+  const favRe = /【FAV】([^【】]+?)\s*([+-]\d+)【\/FAV】/g;
+  let m;
+  while ((m = favRe.exec(text)) !== null) {
+    const npc = m[1].trim();
+    const delta = parseInt(m[2]);
+    if (!isNaN(delta)) {
+      newState.favorability[npc] = (newState.favorability[npc] ?? 0) + delta;
+      newState.statLog.push({ type:'fav', npc, delta, ts: Date.now() });
+    }
+  }
+
+  // STAT
+  const statRe = /【STAT】([^【】]+?)【\/STAT】/g;
+  while ((m = statRe.exec(text)) !== null) {
+    const parts = m[1].trim().split(/\s+/);
+    if (parts[0] === '境界' && parts[1]) {
+      newState.realm = parts[1];
+      newState.statLog.push({ type:'realm', value: parts[1], ts: Date.now() });
+    } else if (parts.length >= 2 && newState.attributes[parts[0]] !== undefined) {
+      const v = parseInt(parts[1]);
+      if (!isNaN(v)) {
+        newState.attributes[parts[0]] = v;
+        newState.statLog.push({ type:'attr', attr: parts[0], value: v, ts: Date.now() });
+      }
+    }
+  }
+
+  // NPC
+  const npcRe = /【NPC】([^|【】]+)\|([^|【】]+)\|([^|【】]+)\|([^|【】]+)\|([^【】]+)【\/NPC】/g;
+  while ((m = npcRe.exec(text)) !== null) {
+    const [,name,realm,element,alignment,personality] = m;
+    newState.npcs[name.trim()] = {
+      realm: realm.trim(), element: element.trim(),
+      alignment: alignment.trim(), personality: personality.trim()
+    };
+  }
+
+  // DICE
+  const diceM = text.match(/【DICE】([^【】]+)【\/DICE】/);
+  newState.diceNeeded = diceM ? diceM[1].trim() : null;
+
+  // CHAPTER
+  const chapM = text.match(/【CHAPTER_END】([\s\S]*?)【\/CHAPTER_END】/);
+  if (chapM) {
+    const raw = chapM[1].trim();
+    // 提取"事件摘要："后的第一句话作为DM记忆用的一句话摘要
+    const summaryMatch = raw.match(/事件摘要[：:]\s*([^\n]+)/);
+    const summary = summaryMatch ? summaryMatch[1].trim() : raw.split('\n')[0];
+    newState.chapters.push({
+      index: newState.chapters.length + 1,
+      raw,
+      summary,  // 一句话，注入给DM
+      ts: Date.now()
+    });
+  }
+
+  // Strip tags from display
+  display = display
+    .replace(/【FAV】[^【】]*【\/FAV】/g, '')
+    .replace(/【STAT】[^【】]*【\/STAT】/g, '')
+    .replace(/【NPC】[^【】]*【\/NPC】/g, '')
+    .replace(/【DICE】[^【】]*【\/DICE】/g, '')
+    .replace(/【CHAPTER_END】[\s\S]*?【\/CHAPTER_END】/g, '')
+    .trim();
+
+  return { newState, display };
+}
+
+// ═══════════════════════════════════════════════════════
+// API
+// ═══════════════════════════════════════════════════════
+function buildSystemPrompt() {
+  // 动态拼接：基础规则 + 当前状态快照（高权重） + 章节记忆（防失忆）
+  const state = gameState;
+
+  const stateBlock = `
+═══════════════════════════════════════
+【当前游戏状态——每次回复都必须参考】
+═══════════════════════════════════════
+境界：${state.realm}
+好感度：${JSON.stringify(state.favorability)}
+属性：根骨${state.attributes.根骨}/身法${state.attributes.身法}/悟性${state.attributes.悟性}/神识${state.attributes.神识}/灵根${state.attributes.灵根}/魅力${state.attributes.魅力}
+物品：${state.inventory.join('、')||'无'}`;
+
+  const chapterBlock = state.chapters.length > 0
+    ? `
+═══════════════════════════════════════
+【章节记忆——防止失忆吃书，必须参考】
+═══════════════════════════════════════
+` +
+      state.chapters.map(c => `第${c.index}章：${c.summary||c.raw}`).join('
+')
+    : '';
+
+  return SYSTEM_PROMPT + stateBlock + chapterBlock;
+}
+
+async function callAPI(userText) {
+  const history = messages
+    .filter(m => m.role === 'user' || m.role === 'assistant')
+    .map(m => ({ role: m.role, content: m.content }));
+
+  const dsMessages = [
+    { role: 'system', content: buildSystemPrompt() },
+    ...history
+  ];
+
+  const resp = await fetch('https://api.deepseek.com/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${apiKey}`
+    },
+    body: JSON.stringify({
+      model: 'deepseek-chat',
+      max_tokens: 1500,
+      messages: dsMessages
+    })
+  });
+
+  if (!resp.ok) {
+    const err = await resp.json().catch(() => ({}));
+    throw new Error(err.error?.message || `HTTP ${resp.status}`);
+  }
+
+  const data = await resp.json();
+  return data.choices?.[0]?.message?.content || '（系统无响应）';
+}
+
+// ═══════════════════════════════════════════════════════
+// GAME FLOW
+// ═══════════════════════════════════════════════════════
+async function beginGame() {
+  const userMsg = { role: 'user', content: '请开始游戏，进入开场序章。' };
+  messages.push(userMsg);
+  showTyping();
+  try {
+    const raw = await callAPI(userMsg.content);
+    removeTyping();
+    const { newState, display } = parseResponse(raw);
+    gameState = newState;
+    const assistantMsg = { role: 'assistant', content: raw, display };
+    messages.push(assistantMsg);
+    appendMessage(assistantMsg);
+    updateUI();
+    saveGame();
+  } catch (e) {
+    removeTyping();
+    appendError(e.message);
+  }
+}
+
+async function sendMessage() {
+  const input = document.getElementById('msg-input');
+  const text = input.value.trim();
+  if (!text || isLoading) return;
+  input.value = '';
+  autoResize(input);
+  hideDice();
+  await doSend(text);
+}
+
+async function doSend(text) {
+  const userMsg = { role: 'user', content: text, display: text };
+  messages.push(userMsg);
+  appendMessage(userMsg);
+  setLoading(true);
+  try {
+    const raw = await callAPI(text);
+    const { newState, display } = parseResponse(raw);
+    gameState = newState;
+    const assistantMsg = { role: 'assistant', content: raw, display };
+    messages.push(assistantMsg);
+    appendMessage(assistantMsg);
+    updateUI();
+    saveGame();
+  } catch (e) {
+    appendError(e.message);
+  } finally {
+    setLoading(false);
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+// DICE
+// ═══════════════════════════════════════════════════════
+function secureRandD20() {
+  // 用crypto.getRandomValues确保真随机，避免移动端Math.random聚集问题
+  const arr = new Uint32Array(1);
+  crypto.getRandomValues(arr);
+  return (arr[0] % 20) + 1;
+}
+
+function rollDice() {
+  if (rolling) return;
+  rolling = true;
+  const btn = document.getElementById('roll-btn');
+  const resultEl = document.getElementById('dice-result');
+  btn.disabled = true;
+  resultEl.className = '';
+  resultEl.textContent = '';
+
+  // 提前决定最终结果，动画只是表演
+  const final = secureRandD20();
+
+  let count = 0;
+  const iv = setInterval(() => {
+    resultEl.textContent = secureRandD20();
+    resultEl.className = 'normal';
+    count++;
+    if (count > 14) {
+      clearInterval(iv);
+      resultEl.textContent = final;
+      if (final === 20) resultEl.className = 'crit';
+      else if (final === 1) resultEl.className = 'fail';
+      else resultEl.className = 'normal';
+      rolling = false;
+
+      setTimeout(() => {
+        hideDice();
+        const suffix = final === 20 ? '（大成功！）' : final === 1 ? '（大失败！）' : '';
+        doSend(`【掷骰结果：${final}】${suffix}`);
+      }, 700);
+    }
+  }, 55);
+}
+
+function showDice(prompt) {
+  document.getElementById('dice-prompt').textContent = prompt;
+  document.getElementById('dice-bar').classList.add('visible');
+  document.getElementById('dice-result').textContent = '';
+  document.getElementById('dice-result').className = '';
+  document.getElementById('roll-btn').disabled = false;
+  rolling = false;
+}
+
+function hideDice() {
+  document.getElementById('dice-bar').classList.remove('visible');
+}
+
+// ═══════════════════════════════════════════════════════
+// RENDER
+// ═══════════════════════════════════════════════════════
+function renderAllMessages() {
+  const chat = document.getElementById('chat');
+  chat.innerHTML = '';
+  messages.forEach(m => {
+    if (m.role !== 'user' && m.role !== 'assistant') return;
+    appendMessage(m);
+  });
+}
+
+function appendMessage(msg) {
+  const chat = document.getElementById('chat');
+  const div = document.createElement('div');
+
+  if (msg.role === 'assistant') {
+    div.className = 'msg msg-dm';
+    div.innerHTML = `<div class="msg-label">DM</div><div class="msg-body">${escHtml(msg.display || msg.content)}</div>`;
+    // show dice if needed
+    if (gameState.diceNeeded) {
+      showDice(gameState.diceNeeded);
+    }
+  } else {
+    div.className = 'msg msg-user';
+    div.innerHTML = `<div class="msg-body">${escHtml(msg.display || msg.content)}</div>`;
+  }
+
+  chat.appendChild(div);
+  scrollToBottom();
+}
+
+function appendError(msg) {
+  const chat = document.getElementById('chat');
+  const div = document.createElement('div');
+  div.className = 'msg msg-dm';
+  div.innerHTML = `<div class="msg-label">系统</div><div class="msg-body" style="color:#c0604a">【灵网波动】${escHtml(msg)}<br><br>请检查 API Key 是否正确，或稍后重试。</div>`;
+  chat.appendChild(div);
+  scrollToBottom();
+}
+
+let typingEl = null;
+function showTyping() {
+  removeTyping();
+  const chat = document.getElementById('chat');
+  typingEl = document.createElement('div');
+  typingEl.className = 'typing';
+  typingEl.innerHTML = `<span class="typing-label">DM</span><div class="dot"></div><div class="dot"></div><div class="dot"></div>`;
+  chat.appendChild(typingEl);
+  scrollToBottom();
+}
+function removeTyping() {
+  if (typingEl) { typingEl.remove(); typingEl = null; }
+}
+
+function setLoading(v) {
+  isLoading = v;
+  if (v) showTyping();
+  else removeTyping();
+  document.getElementById('send-btn').disabled = v;
+  document.getElementById('msg-input').disabled = v;
+}
+
+function scrollToBottom() {
+  const chat = document.getElementById('chat');
+  setTimeout(() => { chat.scrollTop = chat.scrollHeight; }, 50);
+}
+
+function escHtml(s) {
+  return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
+}
+
+// ═══════════════════════════════════════════════════════
+// UI UPDATE
+// ═══════════════════════════════════════════════════════
+function updateUI() {
+  document.getElementById('realm-display').textContent = gameState.realm;
+  renderSidebar();
+}
+
+function renderSidebar() {
+  renderStats();
+  renderNPCs();
+  renderLog();
+}
+
+function renderStats() {
+  const gs = gameState;
+  let html = '';
+
+  // Character
+  html += `<div class="stat-section">
+    <div class="stat-section-label">角色</div>
+    <div class="char-name">屈玮</div>
+    <div class="char-sub">火灵根 · ${gs.realm}</div>
+  </div>`;
+
+  // Attributes
+  html += `<div class="stat-section"><div class="stat-section-label">基础属性</div>`;
+  for (const [k,v] of Object.entries(gs.attributes)) {
+    const pct = Math.min(100, (v/20)*100);
+    const mod = Math.floor((v-10)/2);
+    const modStr = mod >= 0 ? `+${mod}` : `${mod}`;
+    html += `<div class="attr-row">
+      <div class="attr-top"><span class="attr-name">${k}</span><span class="attr-val">${v} <span style="color:var(--text4)">(${modStr})</span></span></div>
+      <div class="attr-bar-bg"><div class="attr-bar-fill" style="width:${pct}%"></div></div>
+    </div>`;
+  }
+  html += '</div>';
+
+  // Favorability
+  html += `<div class="stat-section"><div class="stat-section-label">好感度</div>`;
+  for (const [npc, val] of Object.entries(gs.favorability)) {
+    const pct = Math.min(100, Math.max(0, ((val+50)/150)*100));
+    const cls = val >= 0 ? 'pos' : val >= -30 ? 'neg-light' : 'neg-heavy';
+    const color = val >= 0 ? 'var(--safe)' : val >= -30 ? '#c8a050' : 'var(--danger)';
+    const label = val >= 60 ? '情深' : val >= 30 ? '友好' : val >= 0 ? '中立' : val >= -30 ? '冷淡' : '敌对';
+    html += `<div class="fav-row">
+      <div class="fav-top">
+        <span class="fav-name">${npc}</span>
+        <span style="display:flex;gap:8px;align-items:center">
+          <span style="font-size:10px;color:var(--text3)">${label}</span>
+          <span class="fav-val ${cls}">${val>=0?'+':''}${val}</span>
+        </span>
+      </div>
+      <div class="fav-bar-bg"><div class="fav-bar-fill" style="width:${pct}%;background:${color}"></div></div>
+    </div>`;
+  }
+  html += '</div>';
+
+  // Inventory
+  if (gs.inventory.length > 0) {
+    html += `<div class="stat-section"><div class="stat-section-label">物品</div>`;
+    gs.inventory.forEach(item => {
+      html += `<div class="item-row">${item}</div>`;
+    });
+    html += '</div>';
+  }
+
+  // Recent changes
+  if (gs.statLog.length > 0) {
+    html += `<div class="stat-section"><div class="stat-section-label">近期变化</div>`;
+    [...gs.statLog].reverse().slice(0, 10).forEach(log => {
+      let text = '';
+      if (log.type === 'fav') text = `${log.npc} 好感 ${log.delta>0?'+':''}${log.delta}`;
+      else if (log.type === 'realm') text = `境界突破 → ${log.value}`;
+      else if (log.type === 'attr') text = `${log.attr} → ${log.value}`;
+      html += `<div class="log-row">${text}</div>`;
+    });
+    html += '</div>';
+  }
+
+  document.getElementById('tab-stats').innerHTML = html;
+}
+
+function renderNPCs() {
+  const gs = gameState;
+  let html = '';
+  const entries = Object.entries(gs.npcs);
+  if (entries.length === 0) {
+    html = '<div class="empty-hint">尚无登场人物记录</div>';
+  } else {
+    entries.forEach(([name, info]) => {
+      const fav = gs.favorability[name];
+      const favHtml = fav !== undefined
+        ? `<span class="npc-fav">好感 <span style="color:${fav>=0?'var(--safe)':fav>=-30?'#c8a050':'var(--danger)'}">${fav>=0?'+':''}${fav}</span></span>`
+        : '';
+      html += `<div class="npc-card">
+        <div class="npc-card-top"><span class="npc-name">${name}</span>${favHtml}</div>
+        <div class="npc-info">${info.realm} · ${info.element}<br>${info.alignment}<br><span style="color:var(--text4)">${info.personality}</span></div>
+      </div>`;
+    });
+  }
+  document.getElementById('tab-npcs').innerHTML = html;
+}
+
+function renderLog() {
+  const gs = gameState;
+  let html = '';
+  if (gs.chapters.length === 0) {
+    html = '<div class="empty-hint">章节结束后自动记录</div>';
+  } else {
+    [...gs.chapters].reverse().forEach(ch => {
+      html += `<div class="chapter-card">
+        <div class="chapter-num">第 ${ch.index} 章</div>
+        <div class="chapter-body">${escHtml(ch.raw)}</div>
+      </div>`;
+    });
+  }
+  document.getElementById('tab-log').innerHTML = html;
+}
+
+// ═══════════════════════════════════════════════════════
+// SIDEBAR
+// ═══════════════════════════════════════════════════════
+function toggleSidebar() {
+  const sidebar = document.getElementById('sidebar');
+  const overlay = document.getElementById('overlay');
+  const isOpen = sidebar.classList.contains('open');
+  if (isOpen) {
+    sidebar.classList.remove('open');
+    overlay.classList.remove('visible');
+  } else {
+    renderSidebar();
+    sidebar.classList.add('open');
+    overlay.classList.add('visible');
+  }
+}
+
+function switchTab(tab) {
+  currentTab = tab;
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab')[['stats','npcs','log'].indexOf(tab)].classList.add('active');
+  document.getElementById('tab-stats').style.display = tab === 'stats' ? 'block' : 'none';
+  document.getElementById('tab-npcs').style.display = tab === 'npcs' ? 'block' : 'none';
+  document.getElementById('tab-log').style.display = tab === 'log' ? 'block' : 'none';
+}
+
+// ═══════════════════════════════════════════════════════
+// INPUT
+// ═══════════════════════════════════════════════════════
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 100) + 'px';
+}
+
+function handleKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendMessage();
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════
+window.addEventListener('load', () => {
+  const saved = loadSave();
+  if (saved?.apiKey) {
+    document.getElementById('api-key-input').value = saved.apiKey;
+  }
+  // Init tab display
+  document.getElementById('tab-stats').style.display = 'block';
+  document.getElementById('tab-npcs').style.display = 'none';
+  document.getElementById('tab-log').style.display = 'none';
+});
+</script>
+</body>
+</html>
